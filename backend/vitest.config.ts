@@ -5,8 +5,11 @@ export default defineConfig({
     environment: "node",
     include: ["tests/**/*.test.ts"],
     setupFiles: ["tests/setup/global.ts"],
-    testTimeout: 20000,
-    hookTimeout: 20000,
+    globalSetup: ["tests/setup/global-setup.ts"],
+    // Integration tests share one database — run files serially to avoid cross-file races.
+    fileParallelism: false,
+    testTimeout: 30000,
+    hookTimeout: 30000,
   },
   resolve: {
     alias: {

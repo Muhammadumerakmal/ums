@@ -34,7 +34,7 @@
 - [X] T014 `authenticate` middleware in `src/server/middleware/authenticate.ts` (read HttpOnly cookie → verify JWT → current user {id, role}; throw UNAUTHENTICATED)
 - [X] T015 `authorize` middleware in `src/server/middleware/authorize.ts` (deny-by-default role gate + optional ownership predicate; throw FORBIDDEN)
 - [X] T016 [P] Model data-access helpers in `src/server/models/{user,student,teacher,course,enrollment,grade}.model.ts` (typed CRUD wrappers over Drizzle, filtering soft-deleted rows)
-- [ ] T017 [P] Test DB bootstrap in `tests/setup/global.ts` + `tests/setup/seed.ts` (migrate DATABASE_URL_TEST, truncate-between-tests helper, fixtures: 1 admin, 1 teacher, 2 students, 1 course)
+- [X] T017 [P] Test DB bootstrap in `tests/setup/global.ts` + `tests/setup/seed.ts` (migrate DATABASE_URL_TEST, truncate-between-tests helper, fixtures: 1 admin, 1 teacher, 2 students, 1 course)
 - [X] T018 [P] Seed script in `src/server/models/seed.ts` wired to `npm run db:seed` (admin/teacher/2 students + 1 course + 1 enrollment; hashed passwords)
 
 **Checkpoint**: Schema migrated; auth/authz + lib primitives available; seed + test harness run.
@@ -54,8 +54,8 @@ cross-role access is denied server-side.
 - [X] T023 [P] [US1] Route handler `app/api/auth/logout/route.ts` (POST) and `app/api/auth/me/route.ts` (GET)
 - [X] T024 [US1] Login page `app/(auth)/login/page.tsx` (form → /api/auth/login)
 - [X] T025 [US1] Role-routed dashboards `app/(dashboard)/{admin,teacher,student}/page.tsx` + shared layout guard reading `/api/auth/me`
-- [ ] T026 [P] [US1] Test: sign-in success per role + invalid credentials rejected in `tests/integration/auth.login.test.ts` (FR-001)
-- [ ] T027 [P] [US1] Test: deny-by-default RBAC — unauthenticated 401 + student→admin route 403 in `tests/integration/rbac.test.ts` (FR-003/004)
+- [X] T026 [P] [US1] Test: sign-in success per role + invalid credentials rejected in `tests/integration/auth.login.test.ts` (FR-001)
+- [X] T027 [P] [US1] Test: deny-by-default RBAC — unauthenticated 401 + student→admin route 403 in `tests/integration/rbac.test.ts` (FR-003/004)
 
 **Checkpoint**: US1 independently demoable — auth + RBAC working end to end.
 
@@ -73,8 +73,8 @@ cross-role access is denied server-side.
 - [X] T032 [P] [US2] Route handlers `app/api/students/route.ts` + `app/api/students/[id]/route.ts`
 - [X] T033 [P] [US2] Route handlers `app/api/courses/route.ts` + `app/api/courses/[id]/route.ts`
 - [X] T034 [US2] Admin UI screens under `app/(dashboard)/admin/` (students list/create/edit; courses list/create/edit with teacher select)
-- [ ] T035 [P] [US2] Test: admin CRUD + validation + duplicate email/code CONFLICT in `tests/integration/admin.students-courses.test.ts` (FR-006/007/009)
-- [ ] T036 [P] [US2] Test: assigning non-existent teacher rejected + soft-delete excludes from listing in `tests/integration/course.softdelete.test.ts` (FR-008/022)
+- [X] T035 [P] [US2] Test: admin CRUD + validation + duplicate email/code CONFLICT in `tests/integration/admin.students-courses.test.ts` (FR-006/007/009)
+- [X] T036 [P] [US2] Test: assigning non-existent teacher rejected + soft-delete excludes from listing in `tests/integration/course.softdelete.test.ts` (FR-008/022)
 
 **Checkpoint**: US1+US2 = admin can build the master data other stories depend on.
 
@@ -90,8 +90,8 @@ cross-role access is denied server-side.
 - [X] T039 [US3] `EnrollmentController` in `src/server/controllers/enrollment.controller.ts` (student-self + admin; ownership on drop)
 - [X] T040 [P] [US3] Route handlers `app/api/enrollments/route.ts` + `app/api/enrollments/[id]/route.ts`
 - [X] T041 [US3] Student UI under `app/(dashboard)/student/` (browse active courses, enroll, my courses, drop)
-- [ ] T042 [P] [US3] Test: unique active enrollment — duplicate rejected, re-enroll after drop allowed in `tests/integration/enrollment.unique.test.ts` (FR-012)
-- [ ] T043 [P] [US3] Test: student sees only own enrollments; cannot drop another's in `tests/integration/enrollment.owndata.test.ts` (FR-014)
+- [X] T042 [P] [US3] Test: unique active enrollment — duplicate rejected, re-enroll after drop allowed in `tests/integration/enrollment.unique.test.ts` (FR-012)
+- [X] T043 [P] [US3] Test: student sees only own enrollments; cannot drop another's in `tests/integration/enrollment.owndata.test.ts` (FR-014)
 
 **Checkpoint**: Students can self-manage enrollment with the uniqueness invariant enforced.
 
@@ -108,8 +108,8 @@ cross-role access is denied server-side.
 - [X] T047 [US4] `GradeController` + roster action in `src/server/controllers/grade.controller.ts` (owning-teacher via authorize ownership)
 - [X] T048 [P] [US4] Route handlers `app/api/courses/[id]/roster/route.ts` + `app/api/grades/route.ts` (POST)
 - [X] T049 [US4] Teacher UI under `app/(dashboard)/teacher/` (my courses → roster → set/update grade)
-- [ ] T050 [P] [US4] Test: own-course-only grading — non-owner teacher 403 in `tests/integration/grade.ownership.test.ts` (FR-017)
-- [ ] T051 [P] [US4] Test: enrolled-only grading (non-enrolled → 422) + letter-domain validation + update-in-place in `tests/integration/grade.rules.test.ts` (FR-016/018)
+- [X] T050 [P] [US4] Test: own-course-only grading — non-owner teacher 403 in `tests/integration/grade.ownership.test.ts` (FR-017)
+- [X] T051 [P] [US4] Test: enrolled-only grading (non-enrolled → 422) + letter-domain validation + update-in-place in `tests/integration/grade.rules.test.ts` (FR-016/018)
 
 **Checkpoint**: Grading works with ownership + enrollment invariants enforced.
 
@@ -123,7 +123,7 @@ cross-role access is denied server-side.
 - [X] T052 [US5] `GradeService.listForStudent` (own grades across enrolled courses; ungraded → null)
 - [X] T053 [P] [US5] Route handler `app/api/grades/route.ts` (GET, student-self scope)
 - [X] T054 [US5] Student grades view in `app/(dashboard)/student/grades/page.tsx`
-- [ ] T055 [P] [US5] Test: student sees only own grades; ungraded course returns null not error in `tests/integration/grade.studentview.test.ts` (FR-019)
+- [X] T055 [P] [US5] Test: student sees only own grades; ungraded course returns null not error in `tests/integration/grade.studentview.test.ts` (FR-019)
 
 **Checkpoint**: Full academic loop demoable end to end.
 
