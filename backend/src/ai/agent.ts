@@ -1,4 +1,5 @@
-import { Agent, run, tool } from "@openai/agents";
+import { Agent, run, tool, setDefaultOpenAIClient, setOpenAIAPI, setTracingDisabled } from "@openai/agents";
+import OpenAI from "openai";
 import { z } from "zod";
 import { enrollmentService } from "../services/enrollment.service";
 import { gradeService } from "../services/grade.service";
@@ -15,7 +16,40 @@ export interface StudentContext {
   studentId: string;
 }
 
-const model = process.env.OPENAI_MODEL ?? "gpt-4o-mini";
+/**
+ * Provider selection.
+ * Priority: OpenRouter > Gemini > OpenAI
+ */
+const geminiKey = process.env.GEMINI_API_KEY;
+const openrouterKey = process.env.OPENROUTER_API_KEY;
+const openaiKey = process.env.OPENAI_API_KEY;
+
+if (openrouterKey) {
+  setDefaultOpenAIClient(
+    new OpenAI({
+      apiKey: openrouterKey,
+      baseURL: "https://openrouter.ai/api/v1",
+      defaultHeaders: {
+        "HTTP-Referer": "https://uni-ums.example.com",
+        "X-Title": "UMS AI Assistant",
+      },
+    })
+  );
+  setOpenAIAPI("chat_completions");
+  setTracingDisabled(true);
+} else if (geminiKey) {
+  setDefaultOpenAIClient(
+    new OpenAI({
+      apiKey: geminiKey,
+      baseURL: "https://generativelanguage.googleapis.com/v1beta/openai/",
+    })
+  );
+  setOpenAIAPI("chat_completions"); // Gemini exposes Chat Completions, not the Responses API
+  setTracingDisabled(true); // traces would try to export to OpenAI — turn off for Gemini
+}
+
+const usingCustomEndpoint = !!geminiKey || !!openrouterKey;
+const model = process.env.AI_MODEL ?? (usingCustomEndpoint ? (openrouterKey ? "meta-llama/llama-3.1-8b-instruct" : "gemini-2.0-flash") : "gpt-4o-mini");
 
 /** Read the scoped student id, failing loudly if the run wasn't given a context. */
 function studentId(runContext?: { context: unknown }): string {
@@ -99,10 +133,10 @@ export const studentAssistant = new Agent<StudentContext>({
 
 /** Run one assistant turn for a student. Requires OPENAI_API_KEY at runtime. */
 export async function askAssistant(message: string, context: StudentContext): Promise<string> {
-  if (!process.env.OPENAI_API_KEY) {
+  if (!process.env.GEMINI_API_KEY && !process.env.OPENAI_API_KEY && !process.env.OPENROUTER_API_KEY) {
     throw new AppError(
       "INTERNAL_ERROR",
-      "The AI assistant is not configured. Set OPENAI_API_KEY in the backend environment."
+      "The AI assistant is not configured. Set OPENROUTER_API_KEY, GEMINI_API_KEY, or OPENAI_API_KEY in the backend environment."
     );
   }
   const result = await run(studentAssistant, message, { context });
