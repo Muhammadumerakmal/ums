@@ -74,6 +74,17 @@ cd frontend && npm run typecheck && npm run build
 - Grades restricted to **{A, B, C, D, F}**.
 - **Soft delete** for students/courses (preserves history; excluded from active listings).
 
+## AI student assistant (feature 002)
+
+A student-only conversational assistant built with the **OpenAI Agents SDK** (`@openai/agents`).
+Its tools call the existing backend services **scoped to the signed-in student** (the student id
+comes from the session, never the model), so it never exposes another student's data.
+- Endpoint: `POST /api/assistant` (student-only) · Widget on the student dashboard.
+- Config: set `OPENAI_API_KEY` (and optionally `OPENAI_MODEL`, default `gpt-4o-mini`) in
+  `backend/.env.local`. Without a key it returns a clear "not configured" message.
+- See [ADR-0003](history/adr/ADR-0003-ai-assistant-openai-agents.md) and
+  [specs/002-ai-assistant](specs/002-ai-assistant/spec.md).
+
 ## Notes on cross-origin auth
 
 The backend issues the JWT in an **HttpOnly cookie** and enables **CORS with credentials** for the
@@ -82,4 +93,4 @@ same site or set the cookie `Secure; SameSite=None`.
 
 ## Out of scope (future)
 
-AI assistant (OpenAI Agents SDK), admissions, finance, attendance, scheduling, transcripts/GPA.
+Admissions, finance, attendance, scheduling, transcripts/GPA; teacher/admin AI assistants.

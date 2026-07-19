@@ -3,6 +3,7 @@
 import { useEffect, useState, useCallback } from "react";
 import { useRouter } from "next/navigation";
 import { api } from "@/lib/api";
+import AssistantChat from "@/components/AssistantChat";
 
 interface Course { id: string; code: string; title: string; teacherName: string }
 interface Enrollment { id: string; courseId: string; code: string; title: string }
@@ -83,6 +84,8 @@ export default function StudentDashboard() {
           <li key={g.courseId}><b>{g.code}</b> — {g.title}: {g.grade ?? <i>not yet graded</i>}</li>
         ))}
       </ul>
+
+      <AssistantChat />
     </main>
   );
 }
