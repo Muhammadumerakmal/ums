@@ -7,7 +7,7 @@ surface: agent
 model: claude-opus-4-8
 feature: 001-core-ums
 branch: 001-core-ums
-user: Muhammadaliakmal
+user: Muhammadumerakmal
 command: /sp.specify
 labels: [spec, ums, rbac, enrollment, grades]
 links:

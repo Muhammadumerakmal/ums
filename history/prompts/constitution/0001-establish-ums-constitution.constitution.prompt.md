@@ -7,7 +7,7 @@ surface: agent
 model: claude-opus-4-8
 feature: none
 branch: master
-user: Muhammadaliakmal
+user: Muhammadumerakmal
 command: /sp.constitution
 labels: [constitution, governance, full-stack, sdd]
 links:

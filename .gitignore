@@ -1,0 +1,35 @@
+# dependencies (root + frontend/ + backend/)
+node_modules/
+/.pnp
+.pnp.*
+
+# next.js
+.next/
+/out/
+
+# production
+/build
+/dist
+
+# testing
+/coverage
+
+# env files (never commit real secrets)
+.env
+.env.local
+.env.*.local
+
+# logs
+*.log
+npm-debug.log*
+
+# os / editor
+.DS_Store
+Thumbs.db
+*.swp
+.vscode/
+.idea/
+
+# typescript
+*.tsbuildinfo
+next-env.d.ts

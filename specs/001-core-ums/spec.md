@@ -5,6 +5,15 @@
 **Status**: Draft  
 **Input**: User description: "Core University Management System slice. Domain entities: Students, Courses, Enrollment (many-to-many between students and courses), and Grades. Three roles with server-side RBAC: Admin, Teacher, Student. Backend MUST follow MVC architecture within the Next.js app on the Node.js runtime, backed by Neon serverless Postgres. AI assistant is OUT OF SCOPE for this spec."
 
+## Clarifications
+
+### Session 2026-07-19
+
+- Q: How should the people data model be structured (User accounts vs. Student/Teacher records)? → A: Separate profiles — a `users` account (identity + credentials + role) with distinct Student and Teacher profile records linked one-to-one to a User.
+- Q: What format should grades use? → A: Letter grade A–F (a value from the fixed set {A, B, C, D, F}).
+- Q: When removing a Course or Student that has enrollments/grades, what should happen? → A: Soft delete — records are marked inactive rather than physically deleted; a hard delete that would orphan enrollments/grades is blocked. Grade history is preserved.
+- Q: How should authentication be implemented? → A: Custom authentication with hashed passwords (bcrypt) and token-based (JWT) sessions.
+
 ## User Scenarios & Testing *(mandatory)*
 
 ### User Story 1 - Secure sign-in with role-based access (Priority: P1)
@@ -155,7 +164,8 @@ visible against the correct course, and that no other student's grades are shown
 **Authentication & Authorization**
 
 - **FR-001**: System MUST allow a registered user to sign in with credentials and MUST reject
-  invalid credentials with a clear message.
+  invalid credentials with a clear message. Passwords MUST be stored only as secure hashes
+  (never plaintext), and sessions MUST be maintained via a signed token issued at sign-in.
 - **FR-002**: System MUST assign every user exactly one role from: Administrator, Teacher, Student.
 - **FR-003**: System MUST enforce role permissions on the server for every action and data
   request, denying by default any request lacking an explicit permission.
@@ -183,7 +193,8 @@ visible against the correct course, and that no other student's grades are shown
 
 - **FR-015**: Teachers MUST be able to view the roster of students enrolled in courses they own.
 - **FR-016**: Teachers MUST be able to record and update a grade for a student enrolled in a
-  course they own.
+  course they own. A grade MUST be a value from the fixed set {A, B, C, D, F}; any other value
+  is rejected.
 - **FR-017**: System MUST prevent a teacher from viewing or grading a course they do not own.
 - **FR-018**: System MUST prevent recording a grade for a student not enrolled in that course.
 - **FR-019**: Students MUST be able to view their own grades only, across their enrolled courses.
@@ -193,22 +204,27 @@ visible against the correct course, and that no other student's grades are shown
 - **FR-020**: System MUST persist all records durably so they survive across sessions.
 - **FR-021**: System MUST keep relationships consistent (an enrollment always references a real
   student and real course; a grade always references a real enrollment/roster entry).
-- **FR-022**: System MUST apply a documented, predictable rule when removing records that are
-  referenced by enrollments or grades (block or cascade), avoiding orphaned data.
+- **FR-022**: System MUST use soft deletion for Students and Courses — removal marks the record
+  inactive rather than physically deleting it, preserving related enrollments and grades. A hard
+  delete that would orphan enrollments or grades MUST be blocked. Inactive students/courses are
+  excluded from active listings and cannot receive new enrollments.
 
 ### Key Entities *(include if feature involves data)*
 
-- **User**: A person who can sign in. Has identifying details, credentials, and exactly one role
-  (Administrator, Teacher, or Student). A Teacher user may own courses; a Student user may have
-  enrollments and grades.
-- **Student**: A learner enrolled at the university. Has identifying/profile details and may be
-  enrolled in many courses. (Associated with a User of role Student.)
-- **Course**: A unit of instruction with identifying details (e.g., title/code) and exactly one
-  owning Teacher. May have many enrolled students.
+- **User**: An account that can sign in. Holds identity (e.g., email/name), a secure password
+  hash, and exactly one role (Administrator, Teacher, or Student). Serves as the authentication
+  and authorization record; domain profiles link to it.
+- **Student**: A learner profile linked one-to-one to a User of role Student. Has profile
+  details and an active/inactive status, and may be enrolled in many courses.
+- **Teacher**: An instructor profile linked one-to-one to a User of role Teacher. Owns zero or
+  more courses.
+- **Course**: A unit of instruction with identifying details (e.g., title/code), an owning
+  Teacher, and an active/inactive status. May have many enrolled students.
 - **Enrollment**: The link between one Student and one Course — the many-to-many relationship.
   Each (student, course) pair is unique. Carries enrollment status/date.
 - **Grade**: The academic result for a specific Student in a specific Course they are enrolled
-  in. Belongs to a single enrollment/roster entry and is recorded by the owning Teacher.
+  in — a value from {A, B, C, D, F}. Belongs to a single enrollment/roster entry and is recorded
+  by the owning Teacher.
 
 ## Success Criteria *(mandatory)*
 
@@ -228,12 +244,13 @@ visible against the correct course, and that no other student's grades are shown
 
 ## Assumptions
 
-- Sign-in uses a standard credential-based session model; self-service registration and password
-  reset are not required for this slice (users are provisioned by an administrator or seed data).
-- Each Student and each Teacher corresponds to a User account; the initial dataset may be created
-  via seed data for testing.
-- Grades use a simple recordable value (e.g., a letter or numeric mark); grade scales, weighting,
-  and GPA calculation are out of scope for this slice.
+- Sign-in uses hashed-password credentials with token-based sessions; self-service registration
+  and password reset are not required for this slice (users are provisioned by an administrator
+  or seed data).
+- Each Student and each Teacher corresponds one-to-one to a User account; the initial dataset may
+  be created via seed data for testing.
+- Grades use letter values {A, B, C, D, F}; numeric scales, weighting, and GPA calculation are
+  out of scope for this slice.
 - Semesters/terms, scheduling, attendance, tuition/finance, and notifications are out of scope.
 - English-only UI; accessibility and localization beyond reasonable defaults are out of scope.
 
