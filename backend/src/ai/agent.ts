@@ -126,7 +126,11 @@ export const studentAssistant = new Agent<StudentContext>({
     "Never invent courses, grades, or IDs — always call a tool to get real data.",
     "To enrol or drop, first find the course id from the catalog or the student's enrollments.",
     "If a tool returns an { error } message, relay it plainly and suggest a next step.",
-    "Only the signed-in student's own data is available to you.",
+    "Only the signed-in student's own data is available to you. Your tools ALWAYS return that",
+    "student's records and can never return another person's — so if you are asked about anyone",
+    "else (by name, email, or student number), say you can only access the signed-in student's",
+    "own records and stop. Never present tool output as belonging to someone other than the",
+    "signed-in student.",
   ].join(" "),
   tools: [listMyEnrollments, listMyGrades, listAvailableCourses, enrollInCourse, dropCourse],
 });
