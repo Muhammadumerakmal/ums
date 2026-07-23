@@ -85,6 +85,54 @@ comes from the session, never the model), so it never exposes another student's 
 - See [ADR-0003](history/adr/ADR-0003-ai-assistant-openai-agents.md) and
   [specs/002-ai-assistant](specs/002-ai-assistant/spec.md).
 
+## MCP server (expose UMS over Model Context Protocol)
+
+The backend also ships a **stdio MCP server** (`backend/src/mcp/server.ts`) that exposes UMS to any
+MCP client — Claude Desktop, Claude Code, the MCP Inspector — through the **same backend services
+and business rules** as the REST API. It reuses the existing services directly (like the AI
+assistant), so there is no second copy of the domain logic.
+
+**Identity & RBAC.** The server authenticates **once at startup** as a real UMS user via
+`UMS_MCP_EMAIL` / `UMS_MCP_PASSWORD` (verified with bcrypt through the same `authService`). It then
+advertises **only the tools that user's role may use** (deny-by-default, least privilege), and every
+tool runs scoped to that identity — a client can never widen its own access by naming another user.
+
+| Role | Tools |
+|------|-------|
+| any | `whoami`, `list_courses`, `get_course` |
+| student | + `list_my_enrollments`, `list_my_grades`, `enroll_in_course`, `drop_course` |
+| teacher | + `course_roster`, `set_grade` |
+| admin | + `list_students`, `list_teachers`, `create_course` |
+
+**Run it**
+```bash
+cd backend
+UMS_MCP_EMAIL=jane@uni.edu UMS_MCP_PASSWORD=student1234 npm run mcp   # serves over stdio
+```
+
+**Wire it into an MCP client** (e.g. Claude Desktop `claude_desktop_config.json`). Pass the DB and
+auth secrets in the client's `env` block — the server loads `.env.local` too, but MCP clients launch
+it from their own working directory:
+```jsonc
+{
+  "mcpServers": {
+    "ums": {
+      "command": "npx",
+      "args": ["tsx", "src/mcp/server.ts"],
+      "cwd": "E:/umer-ums/backend",
+      "env": {
+        "DATABASE_URL": "postgres://…neon.tech/neondb?sslmode=require",
+        "JWT_SECRET": "…",
+        "UMS_MCP_EMAIL": "jane@uni.edu",
+        "UMS_MCP_PASSWORD": "student1234"
+      }
+    }
+  }
+}
+```
+Without `UMS_MCP_EMAIL` / `UMS_MCP_PASSWORD` the server exits with a clear "not configured" message.
+Because stdio is the JSON-RPC channel, all server logging goes to **stderr**, never stdout.
+
 ## Notes on cross-origin auth
 
 The backend issues the JWT in an **HttpOnly cookie** and enables **CORS with credentials** for the
